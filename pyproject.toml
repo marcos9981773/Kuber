@@ -1,0 +1,94 @@
+[project]
+name = "kuber"
+version = "0.1.0"
+description = "A desktop application for managing Kubernetes clusters"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [{ name = "Kuber Team" }]
+keywords = ["kubernetes", "docker", "desktop", "pyqt5", "devops"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: System :: Systems Administration",
+]
+
+dependencies = [
+    "PyQt5>=5.15.11",
+    "PyQt5-Qt5<=5.15.2; sys_platform == 'win32'",
+    "PyQt5-sip>=12.13",
+    "kubernetes>=29.0.0",
+    "docker>=7.1.0",
+    "GitPython>=3.1.43",
+    "pyqtgraph>=0.13.7",
+    "PyYAML>=6.0.2",
+    "requests>=2.32.0",
+    "urllib3>=2.2.0",
+    "ruff>=0.15.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-qt>=4.4.0",
+    "pytest-mock>=3.14.0",
+    "pytest-cov>=5.0.0",
+    "ruff>=0.6.0",
+    "mypy>=1.11.0",
+    "black>=24.8.0",
+    "types-PyYAML>=6.0.12",
+    "types-requests>=2.32.0",
+]
+
+[project.scripts]
+kuber = "main:main"
+
+[build-system]
+requires = ["setuptools>=75.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["kuber*"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+fix = true
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "B", "C4", "UP", "N", "ANN", "S", "RUF"]
+ignore = ["ANN101", "ANN102", "S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["ANN", "S"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+ignore_missing_imports = true
+warn_return_any = true
+warn_unused_configs = true
+exclude = ["tests/"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v"
+qt_api = "pyqt5"
+
+[tool.black]
+line-length = 100
+target-version = ["py313"]
+
+[tool.uv]
+required-environments = [
+    "sys_platform == 'win32' and platform_machine == 'AMD64'",
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+    "sys_platform == 'darwin'",
+]
+

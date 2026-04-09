@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  lint:
+    name: Lint (ruff + black)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - name: Install dev dependencies
+        run: pip install ruff black
+      - name: Run ruff
+        run: ruff check . --output-format=github
+      - name: Check formatting (black)
+        run: black --check --diff .
+
+  typecheck:
+    name: Type Check (mypy)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install mypy types-PyYAML types-requests
+      - name: Run mypy
+        run: mypy kuber/ --ignore-missing-imports
+
+  test:
+    name: Tests (pytest)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        python-version: [ "3.13" ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+      - name: Install system deps (Linux - Qt requires display)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y libgl1-mesa-glx libglib2.0-0 xvfb
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run tests (Linux — virtual display)
+        if: runner.os == 'Linux'
+        run: xvfb-run --auto-servernum pytest tests/unit/ --cov=kuber --cov-report=xml
+      - name: Run tests (Windows / macOS)
+        if: runner.os != 'Linux'
+        run: pytest tests/unit/ --cov=kuber --cov-report=xml
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: matrix.os == 'ubuntu-latest'
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+
